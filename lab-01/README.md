@@ -116,7 +116,7 @@ Each route was tested in the browser / client, with status codes logged via serv
 
 ## Screenshots of Working Endpoints
 
-### 1. Plain HTTP Server (`http.createServer`) - Replying "Hello" (Task 3)
+### 1. Plain HTTP Server (`http.createServer`) - Replying "Hello Ayyappa" (Task 3)
 ![Plain HTTP Server](screenshots/route_http_plain.png)
 
 ### 2. Express Server: GET `/` (Welcome Text - Task 5)
