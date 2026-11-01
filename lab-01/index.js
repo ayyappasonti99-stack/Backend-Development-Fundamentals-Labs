@@ -3,6 +3,14 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
+// Middleware: Log every route and its response status code (Task 7)
+app.use((request, response, next) => {
+  response.on('finish', () => {
+    console.log(`[${request.method}] ${request.originalUrl} -> Status: ${response.statusCode}`);
+  });
+  next();
+});
+
 // Route 1: Home (Welcome message)
 app.get('/', (request, response) => {
   response.send('Welcome to the Lab 1 Express Web Server!');
