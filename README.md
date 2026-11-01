@@ -1,7 +1,7 @@
 # Lab 1: Node.js and Express server
 
 **Student Name:** Manikanta · **Registration Number:** 252U1R3087 · **Section:** CSE-DS-2D(307)  
-**Course:** Backend Development Fundamentals (Year II Term II) · **Faculty:** SAI SIVA TEJA · **Institution:** Aurora Deemed to be University  
+**Course:** Backend Development Fundamentals (Year II Term II) · **Faculty:** YUGANDHAR SIR · **Institution:** Aurora Deemed to be University  
 **Repository Link:** [https://github.com/maninaidupspk27-cell/Backend-Development-Fundamentals-Mani_Lab-1](https://github.com/maninaidupspk27-cell/Backend-Development-Fundamentals-Mani_Lab-1)  
 **Live Link:** [https://backend-development-fundamentals-mani-lab-1.vercel.app](https://backend-development-fundamentals-mani-lab-1.vercel.app)
 
