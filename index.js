@@ -11,8 +11,8 @@ app.get('/', (request, response) => {
 // Route 2: Student details (JSON response)
 app.get('/about', (request, response) => {
   response.json({
-    name: 'Manikanta',
-    regNo: '252U1R3087',
+    name: 'Sonti Ayyappa Vigna Kumar',
+    regNo: '252U1R3091',
     section: 'CSE-DS-2D(307)',
     course: 'Backend Development Fundamentals',
     lab: 'Lab 1: Node.js and Express server'

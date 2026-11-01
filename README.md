@@ -1,9 +1,8 @@
 # Lab 1: Node.js and Express server
 
-**Student Name:** Manikanta · **Registration Number:** 252U1R3087 · **Section:** CSE-DS-2D(307)  
+**Student Name:** Sonti Ayyappa Vigna Kumar · **Registration Number:** 252U1R3091 · **Section:** CSE-DS-2D(307)  
 **Course:** Backend Development Fundamentals (Year II Term II) · **Faculty:** YUGANDHAR SIR · **Institution:** Aurora Deemed to be University  
-**Repository Link:** [https://github.com/maninaidupspk27-cell/Backend-Development-Fundamentals-Mani_Lab-1](https://github.com/maninaidupspk27-cell/Backend-Development-Fundamentals-Mani_Lab-1)  
-**Live Link:** [https://backend-development-fundamentals-mani-lab-1.vercel.app](https://backend-development-fundamentals-mani-lab-1.vercel.app)
+**Repository Link:** [https://github.com/ayyappasonti99-stack/Backend-Development-Fundamentals-Labs](https://github.com/ayyappasonti99-stack/Backend-Development-Fundamentals-Labs)
 
 ---
 
@@ -50,10 +49,10 @@ When initializing a Node.js project with `npm init -y`, `package.json` is genera
 Clone the repository and install dependencies:
 ```bash
 # Clone the repository
-git clone https://github.com/maninaidupspk27-cell/Backend-Development-Fundamentals-Mani_Lab-1.git
+git clone https://github.com/ayyappasonti99-stack/Backend-Development-Fundamentals-Labs.git
 
 # Navigate to the project folder
-cd Backend-Development-Fundamentals-Mani_Lab-1
+cd Backend-Development-Fundamentals-Labs
 
 # Install required dependencies (Express)
 npm install
@@ -63,8 +62,8 @@ npm install
 Create a `.env` file in the root directory (optional, default fallbacks are provided in code):
 ```env
 PORT=3000
-STUDENT_NAME=Manikanta
-STUDENT_REG_NO=252U1R3087
+STUDENT_NAME=Sonti Ayyappa Vigna Kumar
+STUDENT_REG_NO=252U1R3091
 STUDENT_SECTION=CSE-DS-2D(307)
 ```
 
@@ -104,7 +103,7 @@ STUDENT_SECTION=CSE-DS-2D(307)
 
 ## --> Screenshots of Working Endpoints
 
-### 1. Plain HTTP Server (`http.createServer`) - Replying "Hello Mani"
+### 1. Plain HTTP Server (`http.createServer`) - Replying "Hello Sonti Ayyappa Vigna Kumar"
 ![Plain HTTP Server](screenshots/route_http_plain.png)
 
 ### 2. Express Server: GET `/` (Welcome Text)
