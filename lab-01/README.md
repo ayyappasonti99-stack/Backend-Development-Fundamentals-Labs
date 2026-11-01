@@ -1,6 +1,6 @@
 # Lab 1: Node.js and Express server
 
-**Student Name:** Sonti Ayyappa Vigna Kumar · **Registration Number:** 252U1R3091 · **Section:** CSE-DS-2D(307)  
+**Student Name:** Sonti Ayyappa Vigna Kumar · **Registration Number:** 252U1R3091 · **Section:** CSE-DS-2B(307)  
 **Course:** Backend Development Fundamentals (Year II Term II) · **Faculty:** Joel Prashanth D · **Institution:** Aurora Deemed to be University  
 **Repository Link:** [https://github.com/ayyappasonti99-stack/Backend-Development-Fundamentals-Labs](https://github.com/ayyappasonti99-stack/Backend-Development-Fundamentals-Labs)  
 **Live Link:** [https://backend-development-fundamentals-labs.vercel.app](https://backend-development-fundamentals-labs.vercel.app) *(or Not applicable / pending deployment)*
@@ -68,7 +68,7 @@ Create a `.env` file in the `lab-01/` directory (optional; default fallbacks are
 PORT=3000
 STUDENT_NAME=Sonti Ayyappa Vigna Kumar
 STUDENT_REG_NO=252U1R3091
-STUDENT_SECTION=CSE-DS-2D(307)
+STUDENT_SECTION=CSE-DS-2B(307)
 ```
 
 ### 4. Running the Servers

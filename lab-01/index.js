@@ -21,7 +21,7 @@ app.get('/about', (request, response) => {
   response.json({
     name: 'Sonti Ayyappa Vigna Kumar',
     regNo: '252U1R3091',
-    section: 'CSE-DS-2D(307)',
+    section: 'CSE-DS-2B(307)',
     course: 'Backend Development Fundamentals',
     lab: 'Lab 1: Node.js and Express server'
   });

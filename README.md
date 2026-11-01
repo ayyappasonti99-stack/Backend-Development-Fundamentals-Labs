@@ -2,7 +2,7 @@
 
 **Student Name:** Sonti Ayyappa Vigna Kumar  
 **Registration Number:** 252U1R3091  
-**Section:** CSE-DS-2D(307)  
+**Section:** CSE-DS-2B(307)  
 **Academic Year:** Year II Term II  
 **Faculty:** Joel Prashanth D  
 **Institution:** Aurora Deemed to be University  
