@@ -4,7 +4,7 @@
 **Registration Number:** 252U1R3091  
 **Section:** CSE-DS-2B(307)  
 **Academic Year:** Year II Term II  
-**Faculty:** Joel Prashanth D  
+**Faculty:** Yugandhar Sir  
 **Institution:** Aurora Deemed to be University  
 **Repository Link:** [https://github.com/ayyappasonti99-stack/Backend-Development-Fundamentals-Labs](https://github.com/ayyappasonti99-stack/Backend-Development-Fundamentals-Labs)
 

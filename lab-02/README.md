@@ -1,7 +1,7 @@
 # Lab 2: SQLite database and CRUD routes
 
 **Student Name:** Sonti Ayyappa Vigna Kumar · **Registration Number:** 252U1R3091 · **Section:** CSE-DS-2B(307)  
-**Course:** Backend Development Fundamentals (Year II Term II) · **Faculty:** Joel Prashanth D · **Institution:** Aurora Deemed to be University  
+**Course:** Backend Development Fundamentals (Year II Term II) · **Faculty:** Yugandhar Sir · **Institution:** Aurora Deemed to be University  
 **GitHub Repository:** [https://github.com/ayyappasonti99-stack/Backend-Development-Fundamentals-Labs](https://github.com/ayyappasonti99-stack/Backend-Development-Fundamentals-Labs)  
 **Live Link:** [https://backend-development-fundamentals-labs.vercel.app](https://backend-development-fundamentals-labs.vercel.app) *(or Not applicable / pending deployment)*
 
