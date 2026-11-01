@@ -17,7 +17,7 @@ This repository contains all lab submissions for the **Backend Development Funda
 | Lab Folder | Title | Status |
 | :--- | :--- | :--- |
 | [📁 `lab-01/`](./lab-01) | **Lab 1: Node.js and Express server** | ✅ Completed |
-| `📁 lab-02/` | *Lab 2* | ⏳ Upcoming |
+| [📁 `lab-02/`](./lab-02) | **Lab 2: SQLite database and CRUD routes** | ✅ Completed |
 | `📁 lab-03/` | *Lab 3* | ⏳ Upcoming |
 | `📁 lab-04/` | *Lab 4* | ⏳ Upcoming |
 | `📁 lab-05/` | *Lab 5* | ⏳ Upcoming |
@@ -30,7 +30,11 @@ This repository contains all lab submissions for the **Backend Development Funda
 ---
 
 ## Lab 1 Overview
-
 - **Folder:** [`lab-01/`](./lab-01)
 - **Objective:** Set up a Node.js project and build a modular web server, first with the built-in `http` module and then with `Express` (v5).
-- **Documentation:** See [`lab-01/README.md`](./lab-01/README.md) for full endpoint explanations, reproduction commands, screenshots, and viva questions.
+- **Documentation:** See [`lab-01/README.md`](./lab-01/README.md) for endpoint guide, reproduction commands, screenshots, and viva answers.
+
+## Lab 2 Overview
+- **Folder:** [`lab-02/`](./lab-02)
+- **Objective:** Connect an Express web server to an SQLite database (`books.db`) using `sqlite` and `sqlite3`, exposing full CRUD routes with parameterized queries.
+- **Documentation:** See [`lab-02/README.md`](./lab-02/README.md) for schema details, CRUD endpoints, screenshots, and viva answers.
