@@ -18,7 +18,7 @@ This repository contains all lab submissions for the **Backend Development Funda
 | :--- | :--- | :--- |
 | [📁 `lab-01/`](./lab-01) | **Lab 1: Node.js and Express server** | ✅ Completed |
 | [📁 `lab-02/`](./lab-02) | **Lab 2: SQLite database and CRUD routes** | ✅ Completed |
-| `📁 lab-03/` | *Lab 3* | ⏳ Upcoming |
+| [📁 `lab-03/`](./lab-03) | **Lab 3: REST API, query parameters, validation, debugging** | ✅ Completed |
 | `📁 lab-04/` | *Lab 4* | ⏳ Upcoming |
 | `📁 lab-05/` | *Lab 5* | ⏳ Upcoming |
 | `📁 lab-06/` | *Lab 6* | ⏳ Upcoming |
@@ -38,3 +38,8 @@ This repository contains all lab submissions for the **Backend Development Funda
 - **Folder:** [`lab-02/`](./lab-02)
 - **Objective:** Connect an Express web server to an SQLite database (`books.db`) using `sqlite` and `sqlite3`, exposing full CRUD routes with parameterized queries.
 - **Documentation:** See [`lab-02/README.md`](./lab-02/README.md) for schema details, CRUD endpoints, screenshots, and viva answers.
+
+## Lab 3 Overview
+- **Folder:** [`lab-03/`](./lab-03)
+- **Objective:** Implement a clean REST API on `goodreads.db` with search, sorting, filtering, and pagination query parameters, request body validation, safe allow-lists against SQL injection, and consistent error handling.
+- **Documentation:** See [`lab-03/README.md`](./lab-03/README.md) for complete query parameter documentation, testing commands, screenshots, and debugging solutions.

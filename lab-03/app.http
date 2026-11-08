@@ -1,0 +1,101 @@
+### 1. Get all books (default limit 10)
+GET http://localhost:3000/books/
+
+### 2. Search by title
+GET http://localhost:3000/books/?search_q=the
+
+### 3. Sort by price, highest first, 3 books
+GET http://localhost:3000/books/?order_by=price&order=DESC&limit=3
+
+### 4. Price range 300 to 400
+GET http://localhost:3000/books/?min_price=300&max_price=400
+
+### 5. Pagination: skip 2, take 2
+GET http://localhost:3000/books/?limit=2&offset=2
+
+### 6. Get one book
+GET http://localhost:3000/books/4/
+
+### 7. Add a book (expect 201)
+POST http://localhost:3000/books/
+Content-Type: application/json
+
+{
+  "title": "Python Basics",
+  "author": "John",
+  "price": 350,
+  "pages": 250
+}
+
+### 8. Update a book (expect 200)
+PUT http://localhost:3000/books/11/
+Content-Type: application/json
+
+{
+  "title": "Python Programming",
+  "author": "John",
+  "price": 450,
+  "pages": 300
+}
+
+### 9. Delete a book (expect 200)
+DELETE http://localhost:3000/books/11/
+
+### 10. Book not found (expect 404)
+GET http://localhost:3000/books/999/
+
+### 11. Invalid id (expect 400)
+GET http://localhost:3000/books/abc/
+
+### 12. Invalid order_by (expect 400)
+GET http://localhost:3000/books/?order_by=password
+
+### 13. Invalid limit (expect 400)
+GET http://localhost:3000/books/?limit=abc
+
+### 14. min_price greater than max_price (expect 400)
+GET http://localhost:3000/books/?min_price=500&max_price=100
+
+### 15. POST missing title (expect 400)
+POST http://localhost:3000/books/
+Content-Type: application/json
+
+{
+  "author": "John",
+  "price": 350
+}
+
+### 16. POST non-numeric price (expect 400)
+POST http://localhost:3000/books/
+Content-Type: application/json
+
+{
+  "title": "Bad Price",
+  "author": "John",
+  "price": "abc"
+}
+
+### 17. POST broken JSON (expect 400)
+POST http://localhost:3000/books/
+Content-Type: application/json
+
+{bad json
+
+### 18. PUT book that does not exist (expect 404)
+PUT http://localhost:3000/books/999/
+Content-Type: application/json
+
+{
+  "title": "A",
+  "author": "B",
+  "price": 1
+}
+
+### 19. DELETE book that does not exist (expect 404)
+DELETE http://localhost:3000/books/999/
+
+### 20. Unknown route (expect 404)
+GET http://localhost:3000/nothing
+
+### 21. SQL injection attempt (expect 200 with [], table survives)
+GET http://localhost:3000/books/?search_q=%27%3BDROP%20TABLE%20book%3B--
