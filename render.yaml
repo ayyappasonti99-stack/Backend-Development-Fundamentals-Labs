@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: backend-development-fundamentals-lab-03
+    runtime: node
+    plan: free
+    rootDir: lab-03
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 20

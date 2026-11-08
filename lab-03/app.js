@@ -83,26 +83,51 @@ const initializeDBAndServer = async () => {
 
     const port = process.env.PORT || 3000;
 
-    // Express 5 passes startup errors (like EADDRINUSE) to this callback
-    app.listen(port, (error) => {
-      if (error) {
-        console.error("Server failed to start:", error.message);
-        process.exit(1);
-      }
-      console.log("Database initialized successfully!");
-      console.log(`Server running on port ${port}`);
-    });
+    // In serverless environments (Vercel), app is exported; in traditional environments, listen on port
+    if (!process.env.VERCEL) {
+      app.listen(port, (error) => {
+        if (error) {
+          console.error("Server failed to start:", error.message);
+          process.exit(1);
+        }
+        console.log("Database initialized successfully!");
+        console.log(`Server running on port ${port}`);
+      });
+    } else {
+      console.log("Database initialized for Vercel Serverless environment");
+    }
   } catch (error) {
     console.error("Database or Server Error:", error.message);
-    process.exit(1);
+    if (!process.env.VERCEL) {
+      process.exit(1);
+    }
   }
 };
 
 // ---------- Routes ----------
 
+// Root welcome route
+app.get("/", (request, response) => {
+  response.status(200).json({
+    message: "Welcome to the Books REST API (Lab 3)",
+    student: {
+      name: "Ayyappa Sonti",
+      regNo: "252U1R3091",
+      section: "S-21, CSE DS 2B",
+      faculty: "Yugandar Sir"
+    },
+    endpoints: {
+      books: "/books/",
+      search: "/books/?search_q=the",
+      sort: "/books/?order_by=price&order=DESC&limit=5",
+      filter: "/books/?min_price=300&max_price=450"
+    }
+  });
+});
+
 // GET all books: search, filter, sort, paginate
 // Example: /books/?search_q=the&min_price=300&max_price=450&order_by=price&order=DESC&limit=5&offset=0
-app.get("/books/", async (request, response) => {
+app.get(["/books", "/books/"], async (request, response) => {
   try {
     const {
       search_q = "",
@@ -176,7 +201,7 @@ app.get("/books/", async (request, response) => {
 });
 
 // GET one book by id
-app.get("/books/:bookId/", async (request, response) => {
+app.get(["/books/:bookId", "/books/:bookId/"], async (request, response) => {
   try {
     const bookId = parseId(request.params.bookId);
     if (bookId === null) {
@@ -198,7 +223,7 @@ app.get("/books/:bookId/", async (request, response) => {
 });
 
 // POST: add a new book
-app.post("/books/", async (request, response) => {
+app.post(["/books", "/books/"], async (request, response) => {
   try {
     const errorMessage = validateBook(request.body);
     if (errorMessage) {
@@ -222,7 +247,7 @@ app.post("/books/", async (request, response) => {
 });
 
 // PUT: update a book by id
-app.put("/books/:bookId/", async (request, response) => {
+app.put(["/books/:bookId", "/books/:bookId/"], async (request, response) => {
   try {
     const bookId = parseId(request.params.bookId);
     if (bookId === null) {
@@ -256,7 +281,7 @@ app.put("/books/:bookId/", async (request, response) => {
 });
 
 // DELETE: remove a book by id
-app.delete("/books/:bookId/", async (request, response) => {
+app.delete(["/books/:bookId", "/books/:bookId/"], async (request, response) => {
   try {
     const bookId = parseId(request.params.bookId);
     if (bookId === null) {
@@ -294,3 +319,5 @@ app.use((error, request, response, next) => {
 
 // ---------- Start ----------
 initializeDBAndServer();
+
+module.exports = app;
