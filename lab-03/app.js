@@ -1,24 +1,58 @@
 const express = require("express");
 const path = require("path");
-const sqlite3 = require("sqlite3");
-const { open } = require("sqlite");
+const fs = require("fs");
+
+let sqlite3 = null;
+let sqlite = null;
+try {
+  sqlite3 = require("sqlite3");
+  sqlite = require("sqlite");
+} catch (e) {
+  console.warn("SQLite native bindings not available, using in-memory store");
+}
 
 const app = express();
 app.use(express.json());
 
-const dbPath = path.join(__dirname, "goodreads.db");
+// Determine database path (/tmp is writable on serverless platforms like Vercel)
+const isVercel = !!process.env.VERCEL;
+let dbPath = path.join(__dirname, "goodreads.db");
+if (isVercel) {
+  const tmpDbPath = path.join("/tmp", "goodreads.db");
+  try {
+    if (!fs.existsSync(tmpDbPath) && fs.existsSync(dbPath)) {
+      fs.copyFileSync(dbPath, tmpDbPath);
+    }
+    dbPath = tmpDbPath;
+  } catch (err) {
+    console.warn("Could not copy database to /tmp:", err.message);
+  }
+}
+
 let db = null;
+let dbInitPromise = null;
+
+// Initial 10 books seed (used for seeding SQLite and as serverless fallback)
+let inMemoryBooks = [
+  { id: 1, title: "Harry Potter", author: "J.K. Rowling", price: 500, pages: 350 },
+  { id: 2, title: "The Hobbit", author: "J.R.R. Tolkien", price: 400, pages: 310 },
+  { id: 3, title: "Wings of Fire", author: "A.P.J. Abdul Kalam", price: 250, pages: 180 },
+  { id: 4, title: "The Alchemist", author: "Paulo Coelho", price: 300, pages: 200 },
+  { id: 5, title: "Atomic Habits", author: "James Clear", price: 450, pages: 320 },
+  { id: 6, title: "Rich Dad Poor Dad", author: "Robert Kiyosaki", price: 350, pages: 240 },
+  { id: 7, title: "Think and Grow Rich", author: "Napoleon Hill", price: 280, pages: 260 },
+  { id: 8, title: "Ikigai", author: "Hector Garcia", price: 320, pages: 190 },
+  { id: 9, title: "Deep Work", author: "Cal Newport", price: 400, pages: 280 },
+  { id: 10, title: "The Power of Habit", author: "Charles Duhigg", price: 380, pages: 290 }
+];
 
 // ---------- Helpers ----------
 
-// ORDER BY column and direction cannot use "?" placeholders,
-// so we only allow values from these safe lists.
 const ALLOWED_ORDER_BY = ["id", "title", "author", "price", "pages"];
 const ALLOWED_ORDER = ["ASC", "DESC"];
 
 const isBlank = (value) => typeof value !== "string" || value.trim() === "";
 
-// Returns an error message if the body is invalid, otherwise null
 const validateBook = (body) => {
   const { title, author, price, pages } = body || {};
 
@@ -37,72 +71,70 @@ const validateBook = (body) => {
   return null;
 };
 
-// Returns the id as a number, or null if it is not a positive whole number
 const parseId = (value) => {
   const id = Number(value);
   return Number.isInteger(id) && id > 0 ? id : null;
 };
 
-// ---------- Initialize database and start server ----------
+// Safe database accessor that handles async initialization on serverless
+const getDB = async () => {
+  if (db) return db;
+  if (!sqlite || !sqlite3) return null;
 
-const initializeDBAndServer = async () => {
-  try {
-    db = await open({
-      filename: dbPath,
-      driver: sqlite3.Database,
-    });
+  if (!dbInitPromise) {
+    dbInitPromise = (async () => {
+      try {
+        const openedDb = await sqlite.open({
+          filename: dbPath,
+          driver: sqlite3.Database,
+        });
 
-    await db.exec(`
-      CREATE TABLE IF NOT EXISTS book (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT,
-        author TEXT,
-        price INTEGER,
-        pages INTEGER
-      );
-    `);
+        await openedDb.exec(`
+          CREATE TABLE IF NOT EXISTS book (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT,
+            author TEXT,
+            price INTEGER,
+            pages INTEGER
+          );
+        `);
 
-    const books = await db.all("SELECT * FROM book;");
-
-    if (books.length === 0) {
-      await db.run(`
-        INSERT INTO book (title, author, price, pages)
-        VALUES
-          ('Harry Potter', 'J.K. Rowling', 500, 350),
-          ('The Hobbit', 'J.R.R. Tolkien', 400, 310),
-          ('Wings of Fire', 'A.P.J. Abdul Kalam', 250, 180),
-          ('The Alchemist', 'Paulo Coelho', 300, 200),
-          ('Atomic Habits', 'James Clear', 450, 320),
-          ('Rich Dad Poor Dad', 'Robert Kiyosaki', 350, 240),
-          ('Think and Grow Rich', 'Napoleon Hill', 280, 260),
-          ('Ikigai', 'Hector Garcia', 320, 190),
-          ('Deep Work', 'Cal Newport', 400, 280),
-          ('The Power of Habit', 'Charles Duhigg', 380, 290);
-      `);
-    }
-
-    const port = process.env.PORT || 3000;
-
-    // In serverless environments (Vercel), app is exported; in traditional environments, listen on port
-    if (!process.env.VERCEL) {
-      app.listen(port, (error) => {
-        if (error) {
-          console.error("Server failed to start:", error.message);
-          process.exit(1);
+        const books = await openedDb.all("SELECT * FROM book;");
+        if (books.length === 0) {
+          for (const book of inMemoryBooks) {
+            await openedDb.run(
+              "INSERT INTO book (id, title, author, price, pages) VALUES (?, ?, ?, ?, ?);",
+              [book.id, book.title, book.author, book.price, book.pages]
+            );
+          }
         }
-        console.log("Database initialized successfully!");
-        console.log(`Server running on port ${port}`);
-      });
-    } else {
-      console.log("Database initialized for Vercel Serverless environment");
-    }
-  } catch (error) {
-    console.error("Database or Server Error:", error.message);
-    if (!process.env.VERCEL) {
-      process.exit(1);
-    }
+        db = openedDb;
+        return db;
+      } catch (err) {
+        console.warn("Database initialization warning:", err.message);
+        return null;
+      }
+    })();
   }
+  return dbInitPromise;
 };
+
+// Start local server if not running serverless on Vercel
+const port = process.env.PORT || 3000;
+if (!isVercel) {
+  getDB().then(() => {
+    app.listen(port, (error) => {
+      if (error) {
+        console.error("Server failed to start:", error.message);
+        process.exit(1);
+      }
+      console.log("Database initialized successfully!");
+      console.log(`Server running on port ${port}`);
+    });
+  }).catch((err) => {
+    console.error("Startup error:", err.message);
+  });
+}
 
 // ---------- Routes ----------
 
@@ -126,7 +158,6 @@ app.get("/", (request, response) => {
 });
 
 // GET all books: search, filter, sort, paginate
-// Example: /books/?search_q=the&min_price=300&max_price=450&order_by=price&order=DESC&limit=5&offset=0
 app.get(["/books", "/books/"], async (request, response) => {
   try {
     const {
@@ -176,25 +207,46 @@ app.get(["/books", "/books/"], async (request, response) => {
         .json({ message: "min_price cannot be greater than max_price" });
     }
 
-    // orderBy and orderDir are safe because they passed the allow-lists above.
-    // Everything else goes through "?" placeholders.
-    const query = `
-      SELECT * FROM book
-      WHERE title LIKE ?
-        AND price BETWEEN ? AND ?
-      ORDER BY ${orderBy} ${orderDir}
-      LIMIT ? OFFSET ?;
-    `;
+    const database = await getDB();
+    if (database) {
+      const query = `
+        SELECT * FROM book
+        WHERE title LIKE ?
+          AND price BETWEEN ? AND ?
+        ORDER BY ${orderBy} ${orderDir}
+        LIMIT ? OFFSET ?;
+      `;
+      const books = await database.all(query, [
+        `%${String(search_q)}%`,
+        minPrice,
+        maxPrice,
+        limitNum,
+        offsetNum,
+      ]);
+      return response.status(200).json(books);
+    }
 
-    const books = await db.all(query, [
-      `%${String(search_q)}%`,
-      minPrice,
-      maxPrice,
-      limitNum,
-      offsetNum,
-    ]);
+    // Serverless in-memory fallback
+    const searchTerm = String(search_q).toLowerCase();
+    const filtered = inMemoryBooks.filter((book) => {
+      const titleMatch = book.title.toLowerCase().includes(searchTerm);
+      const priceMatch = book.price >= minPrice && book.price <= maxPrice;
+      return titleMatch && priceMatch;
+    });
 
-    response.status(200).json(books);
+    filtered.sort((a, b) => {
+      const valA = a[orderBy];
+      const valB = b[orderBy];
+      if (typeof valA === "string") {
+        return orderDir === "ASC"
+          ? valA.localeCompare(valB)
+          : valB.localeCompare(valA);
+      }
+      return orderDir === "ASC" ? valA - valB : valB - valA;
+    });
+
+    const paginated = filtered.slice(offsetNum, offsetNum + limitNum);
+    response.status(200).json(paginated);
   } catch (error) {
     response.status(500).json({ message: error.message });
   }
@@ -210,12 +262,19 @@ app.get(["/books/:bookId", "/books/:bookId/"], async (request, response) => {
         .json({ message: "bookId must be a positive whole number" });
     }
 
-    const book = await db.get("SELECT * FROM book WHERE id = ?;", [bookId]);
+    const database = await getDB();
+    if (database) {
+      const book = await database.get("SELECT * FROM book WHERE id = ?;", [bookId]);
+      if (!book) {
+        return response.status(404).json({ message: "Book not found" });
+      }
+      return response.status(200).json(book);
+    }
 
+    const book = inMemoryBooks.find((b) => b.id === bookId);
     if (!book) {
       return response.status(404).json({ message: "Book not found" });
     }
-
     response.status(200).json(book);
   } catch (error) {
     response.status(500).json({ message: error.message });
@@ -232,14 +291,27 @@ app.post(["/books", "/books/"], async (request, response) => {
 
     const { title, author, price, pages = null } = request.body;
 
-    const result = await db.run(
-      "INSERT INTO book (title, author, price, pages) VALUES (?, ?, ?, ?);",
-      [title.trim(), author.trim(), price, pages]
-    );
+    const database = await getDB();
+    if (database) {
+      const result = await database.run(
+        "INSERT INTO book (title, author, price, pages) VALUES (?, ?, ?, ?);",
+        [title.trim(), author.trim(), price, pages]
+      );
+      return response.status(201).json({
+        message: "Book added successfully",
+        bookId: result.lastID,
+      });
+    }
+
+    const nextId = inMemoryBooks.length > 0
+      ? Math.max(...inMemoryBooks.map((b) => b.id)) + 1
+      : 1;
+    const newBook = { id: nextId, title: title.trim(), author: author.trim(), price, pages };
+    inMemoryBooks.push(newBook);
 
     response.status(201).json({
       message: "Book added successfully",
-      bookId: result.lastID,
+      bookId: nextId,
     });
   } catch (error) {
     response.status(500).json({ message: error.message });
@@ -263,16 +335,33 @@ app.put(["/books/:bookId", "/books/:bookId/"], async (request, response) => {
 
     const { title, author, price, pages = null } = request.body;
 
-    const result = await db.run(
-      `UPDATE book
-       SET title = ?, author = ?, price = ?, pages = ?
-       WHERE id = ?;`,
-      [title.trim(), author.trim(), price, pages, bookId]
-    );
+    const database = await getDB();
+    if (database) {
+      const result = await database.run(
+        `UPDATE book
+         SET title = ?, author = ?, price = ?, pages = ?
+         WHERE id = ?;`,
+        [title.trim(), author.trim(), price, pages, bookId]
+      );
 
-    if (result.changes === 0) {
+      if (result.changes === 0) {
+        return response.status(404).json({ message: "Book not found" });
+      }
+      return response.status(200).json({ message: "Book updated successfully" });
+    }
+
+    const index = inMemoryBooks.findIndex((b) => b.id === bookId);
+    if (index === -1) {
       return response.status(404).json({ message: "Book not found" });
     }
+
+    inMemoryBooks[index] = {
+      ...inMemoryBooks[index],
+      title: title.trim(),
+      author: author.trim(),
+      price,
+      pages,
+    };
 
     response.status(200).json({ message: "Book updated successfully" });
   } catch (error) {
@@ -290,12 +379,21 @@ app.delete(["/books/:bookId", "/books/:bookId/"], async (request, response) => {
         .json({ message: "bookId must be a positive whole number" });
     }
 
-    const result = await db.run("DELETE FROM book WHERE id = ?;", [bookId]);
+    const database = await getDB();
+    if (database) {
+      const result = await database.run("DELETE FROM book WHERE id = ?;", [bookId]);
+      if (result.changes === 0) {
+        return response.status(404).json({ message: "Book not found" });
+      }
+      return response.status(200).json({ message: "Book deleted successfully" });
+    }
 
-    if (result.changes === 0) {
+    const index = inMemoryBooks.findIndex((b) => b.id === bookId);
+    if (index === -1) {
       return response.status(404).json({ message: "Book not found" });
     }
 
+    inMemoryBooks.splice(index, 1);
     response.status(200).json({ message: "Book deleted successfully" });
   } catch (error) {
     response.status(500).json({ message: error.message });
@@ -304,20 +402,15 @@ app.delete(["/books/:bookId", "/books/:bookId/"], async (request, response) => {
 
 // ---------- Fallbacks (must stay AFTER all routes) ----------
 
-// Unknown URL
 app.use((request, response) => {
   response.status(404).json({ message: "Route not found" });
 });
 
-// Error-handling middleware (4 parameters): catches bad JSON bodies etc.
 app.use((error, request, response, next) => {
   if (error.type === "entity.parse.failed") {
     return response.status(400).json({ message: "Invalid JSON in request body" });
   }
   response.status(500).json({ message: error.message });
 });
-
-// ---------- Start ----------
-initializeDBAndServer();
 
 module.exports = app;
