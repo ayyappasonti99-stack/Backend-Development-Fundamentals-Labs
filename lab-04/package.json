@@ -1,0 +1,32 @@
+{
+  "name": "lab-04",
+  "version": "1.0.0",
+  "description": "Lab 4: Registration, login and JWT - Authentication and User Management",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "test": "node test.js"
+  },
+  "keywords": [
+    "express",
+    "sqlite",
+    "bcrypt",
+    "jwt",
+    "authentication"
+  ],
+  "author": "Ayyappa Sonti",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
+    "express": "^5.3.0",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^6.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

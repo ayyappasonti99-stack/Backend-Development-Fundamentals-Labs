@@ -1,0 +1,83 @@
+### Base URL
+@baseUrl = http://localhost:3000
+
+### 1. Welcome & Route Overview
+GET {{baseUrl}}/
+Content-Type: application/json
+
+### 2. View All Users (Verifies passwords are encrypted as bcrypt hashes)
+GET {{baseUrl}}/users/
+Content-Type: application/json
+
+### 3. Register a New User - Success (200 OK)
+POST {{baseUrl}}/register/
+Content-Type: application/json
+
+{
+  "username": "ayyappa",
+  "name": "Ayyappa Sonti",
+  "password": "ayyappa@secure2026",
+  "gender": "Male",
+  "location": "Hyderabad"
+}
+
+### 4. Register - Failure: Duplicate Username (400 Bad Request)
+POST {{baseUrl}}/register/
+Content-Type: application/json
+
+{
+  "username": "ayyappa",
+  "name": "Ayyappa Sonti",
+  "password": "anotherpassword",
+  "gender": "Male",
+  "location": "Hyderabad"
+}
+
+### 5. Register - Failure: Password Too Short (< 5 chars) (400 Bad Request)
+POST {{baseUrl}}/register/
+Content-Type: application/json
+
+{
+  "username": "shortpass_user",
+  "name": "Short Pass User",
+  "password": "123",
+  "gender": "Male",
+  "location": "Bengaluru"
+}
+
+### 6. Login - Success (200 OK, returns { jwt_token })
+# @name loginSuccess
+POST {{baseUrl}}/login/
+Content-Type: application/json
+
+{
+  "username": "ayyappa",
+  "password": "ayyappa@secure2026"
+}
+
+### 7. Login - Failure: Unknown / Non-existent User (400 Bad Request)
+POST {{baseUrl}}/login/
+Content-Type: application/json
+
+{
+  "username": "unknown_ghost_user",
+  "password": "somepassword"
+}
+
+### 8. Login - Failure: Wrong Password (400 Bad Request)
+POST {{baseUrl}}/login/
+Content-Type: application/json
+
+{
+  "username": "ayyappa",
+  "password": "wrong_password_xyz"
+}
+
+### 9. Access Protected Route with JWT Token
+@token = {{loginSuccess.response.body.jwt_token}}
+
+GET {{baseUrl}}/profile/
+Authorization: Bearer {{token}}
+
+### 10. Access Protected Route without JWT Token (401 Unauthorized)
+GET {{baseUrl}}/profile/

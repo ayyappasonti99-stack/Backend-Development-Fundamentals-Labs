@@ -19,7 +19,7 @@ This repository contains all lab submissions for the **Backend Development Funda
 | [📁 `lab-01/`](./lab-01) | **Lab 1: Node.js and Express server** | ✅ Completed |
 | [📁 `lab-02/`](./lab-02) | **Lab 2: SQLite database and CRUD routes** | ✅ Completed |
 | [📁 `lab-03/`](./lab-03) | **Lab 3: REST API, query parameters, validation, debugging** | ✅ Completed |
-| `📁 lab-04/` | *Lab 4* | ⏳ Upcoming |
+| [📁 `lab-04/`](./lab-04) | **Lab 4: Registration, login and JWT** | ✅ Completed |
 | `📁 lab-05/` | *Lab 5* | ⏳ Upcoming |
 | `📁 lab-06/` | *Lab 6* | ⏳ Upcoming |
 | `📁 lab-07/` | *Lab 7* | ⏳ Upcoming |
@@ -43,3 +43,8 @@ This repository contains all lab submissions for the **Backend Development Funda
 - **Folder:** [`lab-03/`](./lab-03)
 - **Objective:** Implement a clean REST API on `goodreads.db` with search, sorting, filtering, and pagination query parameters, request body validation, safe allow-lists against SQL injection, and consistent error handling.
 - **Documentation:** See [`lab-03/README.md`](./lab-03/README.md) for complete query parameter documentation, testing commands, screenshots, and debugging solutions.
+
+## Lab 4 Overview
+- **Folder:** [`lab-04/`](./lab-04)
+- **Objective:** Implement user registration and login authentication using bcrypt for password hashing and JSON Web Tokens (JWT) for secure sessionless route authorization (`/profile/`).
+- **Documentation:** See [`lab-04/README.md`](./lab-04/README.md) for complete endpoint documentation, schema details, JWT decoded structure, automated test suite, and viva answers.

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#1a1a2e; font-family:'Segoe UI',sans-serif; padding:24px; }
+.card { background:#16213e; border-radius:10px; overflow:hidden; max-width:720px; margin:0 auto; box-shadow:0 4px 24px rgba(0,0,0,0.4); }
+.header { background:#0f3460; padding:16px 20px; }
+.header h2 { color:#e94560; font-size:18px; }
+.header p { color:#aaa; font-size:12px; margin-top:4px; }
+.section { padding:16px 20px; border-bottom:1px solid #2a2a4a; }
+.section h3 { color:#f0ad4e; font-size:13px; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+.section pre { background:#11111b; padding:14px; border-radius:6px; color:#cdd6f4; font-size:13px; line-height:1.6; font-family:'Fira Code','Consolas',monospace; white-space:pre-wrap; }
+.token { padding:16px 20px; }
+.token h3 { color:#888; font-size:12px; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+.token code { background:#11111b; display:block; padding:12px; border-radius:6px; color:#89b4fa; font-size:10px; word-break:break-all; font-family:'Fira Code','Consolas',monospace; }
+.verified { padding:12px 20px 16px; color:#27ae60; font-size:13px; font-weight:600; }
+</style></head><body>
+<div class="card">
+  <div class="header">
+    <h2>JWT.IO — Decoded Token</h2>
+    <p>Verifying the JWT token structure: Header · Payload · Signature</p>
+  </div>
+  <div class="section">
+    <h3>Header (Algorithm & Token Type)</h3>
+    <pre>{
+  &quot;alg&quot;: &quot;HS256&quot;,
+  &quot;typ&quot;: &quot;JWT&quot;
+}</pre>
+  </div>
+  <div class="section">
+    <h3>Payload (Data / Claims)</h3>
+    <pre>{
+  &quot;username&quot;: &quot;ayyappa&quot;,
+  &quot;iat&quot;: 1794997152,
+  &quot;exp&quot;: 1797589152
+}</pre>
+  </div>
+  <div class="section">
+    <h3>What's NOT in the payload</h3>
+    <pre>password: undefined  ← Never included in the token
+Only "username" is stored as a claim</pre>
+  </div>
+  <div class="token">
+    <h3>Encoded Token</h3>
+    <code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImF5eWFwcGEiLCJpYXQiOjE3OTQ5OTcxNTIsImV4cCI6MTc5NzU4OTE1Mn0._VbGvRWSN0qJeOAOb1I-mZF98lowSjcdxsXBGIX2qWE</code>
+  </div>
+  <div class="verified">✅ Signature Verified with secret: AURORA_BACKEND_LABS_SECRET_KEY_2026</div>
+</div></body></html>
