@@ -1,8 +1,6 @@
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const { open } = require("sqlite");
-const sqlite3 = require("sqlite3");
 const jwt = require("jsonwebtoken");
 
 // Safe loader for bcrypt (supports native bcrypt with pure-JS bcryptjs fallback)
@@ -11,6 +9,16 @@ try {
   bcrypt = require("bcrypt");
 } catch (err) {
   bcrypt = require("bcryptjs");
+}
+
+// Safe loader for sqlite (supports native sqlite3 with in-memory fallback for serverless environments)
+let sqliteOpen = null;
+let sqlite3 = null;
+try {
+  sqliteOpen = require("sqlite").open;
+  sqlite3 = require("sqlite3");
+} catch (err) {
+  console.warn("SQLite native bindings not available, falling back to in-memory store:", err.message);
 }
 
 const app = express();
@@ -41,50 +49,82 @@ const dbPath = isVercel ? path.join("/tmp", "userData.db") : originalDbPath;
 let db = null;
 let dbPromise = null;
 
+// ---------- In-Memory Fallback Store (for Vercel Serverless) ----------
+let inMemoryUsers = [];
+let inMemoryInitialized = false;
+
+const initInMemoryUsers = async () => {
+  if (!inMemoryInitialized) {
+    const defaultPasswordHash = await bcrypt.hash("rahul@2026", SALT_ROUNDS);
+    inMemoryUsers.push({
+      id: 1,
+      username: "rahul",
+      name: "Rahul Sharma",
+      password: defaultPasswordHash,
+      gender: "Male",
+      location: "Hyderabad",
+    });
+    inMemoryInitialized = true;
+    console.log("Seeded in-memory fallback user: rahul (password: rahul@2026)");
+  }
+};
+
 // ---------- Database Initializer ----------
 const getDB = async () => {
+  if (!sqliteOpen || !sqlite3) {
+    await initInMemoryUsers();
+    return null;
+  }
+
   if (!dbPromise) {
     dbPromise = (async () => {
-      // In Vercel serverless environments, copy database to writable /tmp
-      if (isVercel && fs.existsSync(originalDbPath) && !fs.existsSync(dbPath)) {
-        try {
-          fs.copyFileSync(originalDbPath, dbPath);
-        } catch (copyErr) {
-          console.error("Warning: could not copy db to /tmp:", copyErr.message);
+      try {
+        // In Vercel serverless environments, copy database to writable /tmp
+        if (isVercel && fs.existsSync(originalDbPath) && !fs.existsSync(dbPath)) {
+          try {
+            fs.copyFileSync(originalDbPath, dbPath);
+          } catch (copyErr) {
+            console.error("Warning: could not copy db to /tmp:", copyErr.message);
+          }
         }
+
+        const database = await sqliteOpen({
+          filename: dbPath,
+          driver: sqlite3.Database,
+        });
+
+        // Task 2: Create a user table with unique username, name, and hashed password column
+        await database.exec(`
+          CREATE TABLE IF NOT EXISTS user (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            password TEXT NOT NULL,
+            gender TEXT,
+            location TEXT
+          );
+        `);
+
+        // Seed a default test user if the table is empty
+        const existingUsers = await database.all("SELECT * FROM user;");
+        if (existingUsers.length === 0) {
+          const defaultPasswordHash = await bcrypt.hash("rahul@2026", SALT_ROUNDS);
+          await database.run(
+            `INSERT INTO user (username, name, password, gender, location)
+             VALUES (?, ?, ?, ?, ?);`,
+            ["rahul", "Rahul Sharma", defaultPasswordHash, "Male", "Hyderabad"]
+          );
+          console.log("Seeded initial user: rahul (password: rahul@2026)");
+        }
+
+        db = database;
+        return database;
+      } catch (err) {
+        console.warn("SQLite initialization failed, using in-memory store:", err.message);
+        await initInMemoryUsers();
+        db = null;
+        return null;
       }
-
-      const database = await open({
-        filename: dbPath,
-        driver: sqlite3.Database,
-      });
-
-      // Task 2: Create a user table with unique username, name, and hashed password column
-      await database.exec(`
-        CREATE TABLE IF NOT EXISTS user (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          username TEXT UNIQUE NOT NULL,
-          name TEXT NOT NULL,
-          password TEXT NOT NULL,
-          gender TEXT,
-          location TEXT
-        );
-      `);
-
-      // Seed a default test user if the table is empty
-      const existingUsers = await database.all("SELECT * FROM user;");
-      if (existingUsers.length === 0) {
-        const defaultPasswordHash = await bcrypt.hash("rahul@2026", SALT_ROUNDS);
-        await database.run(
-          `INSERT INTO user (username, name, password, gender, location)
-           VALUES (?, ?, ?, ?, ?);`,
-          ["rahul", "Rahul Sharma", defaultPasswordHash, "Male", "Hyderabad"]
-        );
-        console.log("Seeded initial user: rahul (password: rahul@2026)");
-      }
-
-      db = database;
-      return database;
     })();
   }
   return dbPromise;
@@ -182,28 +222,53 @@ app.post(["/register", "/register/"], async (request, response) => {
     const trimmedUsername = username.trim();
 
     // Check if user already exists
-    const selectUserQuery = `SELECT * FROM user WHERE username = ?;`;
-    const existingUser = await db.get(selectUserQuery, [trimmedUsername]);
+    const database = await getDB();
+    if (database) {
+      const selectUserQuery = `SELECT * FROM user WHERE username = ?;`;
+      const existingUser = await database.get(selectUserQuery, [trimmedUsername]);
 
-    if (existingUser !== undefined) {
+      if (existingUser !== undefined) {
+        return response.status(400).json({ message: "User already exists" });
+      }
+
+      // Hash password with bcrypt
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+
+      // Save new user in database
+      const createUserQuery = `
+        INSERT INTO user (username, name, password, gender, location)
+        VALUES (?, ?, ?, ?, ?);
+      `;
+      await database.run(createUserQuery, [
+        trimmedUsername,
+        name && typeof name === "string" ? name.trim() : trimmedUsername,
+        hashedPassword,
+        gender || null,
+        location || null,
+      ]);
+
+      return response.status(200).json({ message: "User created successfully" });
+    }
+
+    // In-memory fallback (when SQLite native driver is unavailable on serverless)
+    const existing = inMemoryUsers.find((u) => u.username === trimmedUsername);
+    if (existing) {
       return response.status(400).json({ message: "User already exists" });
     }
 
-    // Hash password with bcrypt
     const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+    const nextId = inMemoryUsers.length > 0
+      ? Math.max(...inMemoryUsers.map((u) => u.id)) + 1
+      : 1;
 
-    // Save new user in database
-    const createUserQuery = `
-      INSERT INTO user (username, name, password, gender, location)
-      VALUES (?, ?, ?, ?, ?);
-    `;
-    await db.run(createUserQuery, [
-      trimmedUsername,
-      name && typeof name === "string" ? name.trim() : trimmedUsername,
-      hashedPassword,
-      gender || null,
-      location || null,
-    ]);
+    inMemoryUsers.push({
+      id: nextId,
+      username: trimmedUsername,
+      name: name && typeof name === "string" ? name.trim() : trimmedUsername,
+      password: hashedPassword,
+      gender: gender || null,
+      location: location || null,
+    });
 
     return response.status(200).json({ message: "User created successfully" });
   } catch (error) {
@@ -223,8 +288,14 @@ app.post(["/login", "/login/"], async (request, response) => {
     const trimmedUsername = String(username).trim();
 
     // Query user by username
-    const selectUserQuery = `SELECT * FROM user WHERE username = ?;`;
-    const dbUser = await db.get(selectUserQuery, [trimmedUsername]);
+    const database = await getDB();
+    let dbUser;
+    if (database) {
+      const selectUserQuery = `SELECT * FROM user WHERE username = ?;`;
+      dbUser = await database.get(selectUserQuery, [trimmedUsername]);
+    } else {
+      dbUser = inMemoryUsers.find((u) => u.username === trimmedUsername);
+    }
 
     // Reject unknown user with 400
     if (dbUser === undefined) {
@@ -252,7 +323,13 @@ app.post(["/login", "/login/"], async (request, response) => {
 // GET /users/: View all users in database (verifies passwords are saved as hashes)
 app.get(["/users", "/users/"], async (request, response) => {
   try {
-    const users = await db.all("SELECT id, username, name, password, gender, location FROM user;");
+    const database = await getDB();
+    let users;
+    if (database) {
+      users = await database.all("SELECT id, username, name, password, gender, location FROM user;");
+    } else {
+      users = inMemoryUsers;
+    }
     response.status(200).json({
       totalUsers: users.length,
       users: users,
@@ -265,8 +342,23 @@ app.get(["/users", "/users/"], async (request, response) => {
 // GET /profile/: Protected route verifying JWT authorization header
 app.get(["/profile", "/profile/"], authenticateToken, async (request, response) => {
   try {
-    const selectUserQuery = `SELECT id, username, name, gender, location FROM user WHERE username = ?;`;
-    const userProfile = await db.get(selectUserQuery, [request.username]);
+    const database = await getDB();
+    let userProfile;
+    if (database) {
+      const selectUserQuery = `SELECT id, username, name, gender, location FROM user WHERE username = ?;`;
+      userProfile = await database.get(selectUserQuery, [request.username]);
+    } else {
+      const found = inMemoryUsers.find((u) => u.username === request.username);
+      if (found) {
+        userProfile = {
+          id: found.id,
+          username: found.username,
+          name: found.name,
+          gender: found.gender,
+          location: found.location,
+        };
+      }
+    }
 
     if (!userProfile) {
       return response.status(404).json({ message: "User profile not found" });
